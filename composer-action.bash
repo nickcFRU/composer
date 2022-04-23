@@ -4,12 +4,26 @@ github_action_path=$(dirname "$0")
 docker_tag=$(cat ./docker_tag)
 echo "Docker tag: $docker_tag" >> output.log 2>&1
 
-phar_url="https://getcomposer.org/download/latest-"
+phar_url="https://getcomposer.org/download/"
 if [ "$ACTION_VERSION" == "latest" ]
 then
-	phar_url="${phar_url}stable/composer.phar"
+	phar_url="${phar_url}latest-stable/composer.phar"
 else
-	phar_url="${phar_url}${ACTION_VERSION}/composer.phar"
+	# if there's less than 2 periods in the version, get the latest release for that version
+	# e.g. 2 => latest-2.x/composer.phar
+	# e.g. 2.1 => latest-2.1.x/composer.phar
+	# otherwise use the exact version number
+	# e.g. 2.1.2 => 2.1.2/composer.phar
+	#
+	# The ACTION_VERSION variable is appended to with the ".x" string if there
+	# are less than 2 periods in the version string.
+	period_count=$(echo "$ACTION_VERSION" | grep -o '\.' | wc -l)
+	phar_url_version=$ACTION_VERSION
+	if (( period_count < 2 ))
+	then
+		phar_url_version="latest-$phar_url_version.x"
+	fi
+	phar_url="${phar_url}${phar_url_version}/composer.phar"
 fi
 curl --silent -H "User-agent: cURL (https://github.com/php-actions)" -L "$phar_url" > "${github_action_path}/composer.phar"
 chmod +x "${github_action_path}/composer.phar"
