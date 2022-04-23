@@ -25,6 +25,7 @@ else
 	fi
 	phar_url="${phar_url}${phar_url_version}/composer.phar"
 fi
+echo "Phar URL: $phar_url"
 curl --silent -H "User-agent: cURL (https://github.com/php-actions)" -L "$phar_url" > "${github_action_path}/composer.phar"
 chmod +x "${github_action_path}/composer.phar"
 
